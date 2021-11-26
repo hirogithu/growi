@@ -1,4 +1,4 @@
-import React, { useState, useRef, FC } from 'react';
+import React, { useState, FC } from 'react';
 import PropTypes from 'prop-types';
 import {
   Modal, ModalHeader, ModalBody, ModalFooter,
@@ -6,7 +6,7 @@ import {
 import { parseISO, format } from 'date-fns';
 import { useTranslation } from 'react-i18next';
 // TODO: consider whether to use codemirrorEditor
-import { UnControlled as CodeMirrorAny } from 'react-codemirror2';
+import { Controlled as CodeMirrorAny } from 'react-codemirror2';
 import PageContainer from '../../client/services/PageContainer';
 import EditorContainer from '../../client/services/EditorContainer';
 
@@ -27,11 +27,13 @@ type ConflictDiffModalProps = {
 
 export const ConflictDiffModal: FC<ConflictDiffModalProps> = (props) => {
   const { t } = useTranslation('');
-  const resolvedRevision = useRef<string>('');
+  const [resolvedRevision, setResolvedRevision] = useState<string>('');
   const [isRevisionselected, setIsRevisionSelected] = useState<boolean>(false);
 
   const { pageContainer, editorContainer } = props;
   const { request, origin, latest } = pageContainer.state.revisionsOnConflict || { request: {}, origin: {}, latest: {} };
+
+  const { editorOptions } = editorContainer.state;
 
   const codeMirrorRevisionOption = {
     mode: 'htmlmixed',
@@ -54,7 +56,7 @@ export const ConflictDiffModal: FC<ConflictDiffModalProps> = (props) => {
       await pageContainer.resolveConflictAndReload(
         pageContainer.state.pageId,
         latest.revisionId,
-        resolvedRevision.current,
+        resolvedRevision,
         editorContainer.getCurrentOptionsToSave(),
       );
     }
@@ -86,6 +88,7 @@ export const ConflictDiffModal: FC<ConflictDiffModalProps> = (props) => {
                     <p className="my-0">{format(parseISO(request.createdAt), 'yyyy/MM/dd HH:mm:ss')}</p>
                   </div>
                 </div>
+                {/* TODO: 78640 replace diff component */}
                 <CodeMirror
                   value={request.revisionBody}
                   options={codeMirrorRevisionOption}
@@ -96,7 +99,7 @@ export const ConflictDiffModal: FC<ConflictDiffModalProps> = (props) => {
                     className="btn btn-primary"
                     onClick={() => {
                       setIsRevisionSelected(true);
-                      resolvedRevision.current = request.revisionBody;
+                      setResolvedRevision(request.revisionBody);
                     }}
                   >
                     <i className="icon-fw icon-arrow-down-circle"></i>
@@ -115,6 +118,7 @@ export const ConflictDiffModal: FC<ConflictDiffModalProps> = (props) => {
                     <p className="my-0">{format(parseISO(origin.createdAt), 'yyyy/MM/dd HH:mm:ss')}</p>
                   </div>
                 </div>
+                {/* TODO: 78640 replace diff component */}
                 <CodeMirror
                   value={origin.revisionBody}
                   options={codeMirrorRevisionOption}
@@ -125,7 +129,7 @@ export const ConflictDiffModal: FC<ConflictDiffModalProps> = (props) => {
                     className="btn btn-primary"
                     onClick={() => {
                       setIsRevisionSelected(true);
-                      resolvedRevision.current = origin.revisionBody;
+                      setResolvedRevision(origin.revisionBody);
                     }}
                   >
                     <i className="icon-fw icon-arrow-down-circle"></i>
@@ -144,6 +148,7 @@ export const ConflictDiffModal: FC<ConflictDiffModalProps> = (props) => {
                     <p className="my-0">{format(parseISO(latest.createdAt), 'yyyy/MM/dd HH:mm:ss')}</p>
                   </div>
                 </div>
+                {/* TODO: 78640 replace diff component */}
                 <CodeMirror
                   value={latest.revisionBody}
                   options={codeMirrorRevisionOption}
@@ -154,7 +159,7 @@ export const ConflictDiffModal: FC<ConflictDiffModalProps> = (props) => {
                     className="btn btn-primary"
                     onClick={() => {
                       setIsRevisionSelected(true);
-                      resolvedRevision.current = latest.revisionBody;
+                      setResolvedRevision(latest.revisionBody);
                     }}
                   >
                     <i className="icon-fw icon-arrow-down-circle"></i>
@@ -165,17 +170,27 @@ export const ConflictDiffModal: FC<ConflictDiffModalProps> = (props) => {
               <div className="col-12 border border-dark">
                 <h3 className="font-weight-bold my-2">{t('modal_resolve_conflict.selected_editable_revision')}</h3>
                 <CodeMirror
-                  value={resolvedRevision.current}
+                  value={resolvedRevision}
                   options={{
-                    mode: 'htmlmixed',
+                    mode: editorOptions.mode,
+                    theme: editorOptions.theme,
+                    styleActiveLine: editorOptions.styleActiveLine,
                     lineNumbers: true,
-                    tabSize: 2,
-                    indentUnit: 2,
+                    tabSize: 4,
+                    indentUnit: editorContainer.state.indentSize,
+                    lineWrapping: true,
+                    scrollPastEnd: true,
+                    autoRefresh: { force: true },
+                    autoCloseTags: true,
                     placeholder: t('modal_resolve_conflict.resolve_conflict_message'),
+                    matchBrackets: true,
+                    matchTags: { bothTags: true },
+                    foldGutter: true,
+                    highlightSelectionMatches: { annotateScrollbar: true },
+                    lint: editorContainer.state.isTextlintEnabled,
                   }}
-                  onChange={(editor, data, pageBody) => {
-                    if (pageBody === '') setIsRevisionSelected(false);
-                    resolvedRevision.current = pageBody;
+                  onBeforeChange={(editor, data, value) => {
+                    setResolvedRevision(value);
                   }}
                 />
               </div>
