@@ -6,7 +6,6 @@ import { withTranslation } from 'react-i18next';
 
 import { withUnstatedContainers } from './UnstatedUtils';
 import AppContainer from '~/client/services/AppContainer';
-
 import { toastError } from '~/client/util/apiNotification';
 import SearchPageLayout from './SearchPage/SearchPageLayout';
 import SearchResultContent from './SearchPage/SearchResultContent';
@@ -34,19 +33,20 @@ class SearchPage extends React.Component {
       selectedPages: new Set(),
       searchResultCount: 0,
       activePage: 1,
-      pagingLimit: 10, // change to an appropriate limit number
-      excludeUsersHome: true,
-      excludeTrash: true,
+      pagingLimit: this.props.appContainer.config.pageLimitationL || 50,
+      excludeUserPages: true,
+      excludeTrashPages: true,
     };
 
     this.changeURL = this.changeURL.bind(this);
     this.search = this.search.bind(this);
-    this.searchHandler = this.searchHandler.bind(this);
+    this.onSearchInvoked = this.onSearchInvoked.bind(this);
     this.selectPage = this.selectPage.bind(this);
     this.toggleCheckBox = this.toggleCheckBox.bind(this);
-    this.onExcludeUsersHome = this.onExcludeUsersHome.bind(this);
-    this.onExcludeTrash = this.onExcludeTrash.bind(this);
+    this.switchExcludeUserPagesHandler = this.switchExcludeUserPagesHandler.bind(this);
+    this.switchExcludeTrashPagesHandler = this.switchExcludeTrashPagesHandler.bind(this);
     this.onPagingNumberChanged = this.onPagingNumberChanged.bind(this);
+    this.onPagingLimitChanged = this.onPagingLimitChanged.bind(this);
   }
 
   componentDidMount() {
@@ -68,12 +68,12 @@ class SearchPage extends React.Component {
     return query;
   }
 
-  onExcludeUsersHome() {
-    this.setState({ excludeUsersHome: !this.state.excludeUsersHome });
+  switchExcludeUserPagesHandler() {
+    this.setState({ excludeUserPages: !this.state.excludeUserPages });
   }
 
-  onExcludeTrash() {
-    this.setState({ excludeTrash: !this.state.excludeTrash });
+  switchExcludeTrashPagesHandler() {
+    this.setState({ excludeTrashPages: !this.state.excludeTrashPages });
   }
 
   changeURL(keyword, refreshHash) {
@@ -91,10 +91,10 @@ class SearchPage extends React.Component {
     let query = keyword;
 
     // pages included in specific path are not retrived when prefix is added
-    if (this.state.excludeTrash) {
+    if (this.state.excludeTrashPages) {
       query = `${query} -prefix:${specificPathNames.trash}`;
     }
-    if (this.state.excludeUsersHome) {
+    if (this.state.excludeUserPages) {
       query = `${query} -prefix:${specificPathNames.user}`;
     }
 
@@ -105,20 +105,25 @@ class SearchPage extends React.Component {
    * this method is called when user changes paging number
    */
   async onPagingNumberChanged(activePage) {
-    // this.setState does not change the state immediately and following calls of this.search outside of this.setState will have old activePage state.
-    // To prevent above, pass this.search as a callback function to make sure this.search will have the latest activePage state.
     this.setState({ activePage }, () => this.search({ keyword: this.state.searchedKeyword }));
   }
 
   /**
    * this method is called when user searches by pressing Enter or using searchbox
    */
-  async searchHandler(data) {
-    // this.setState does not change the state immediately and following calls of this.search outside of this.setState will have old activePage state.
-    // To prevent above, pass this.search as a callback function to make sure this.search will have the latest activePage state.
+  async onSearchInvoked(data) {
     this.setState({ activePage: 1 }, () => this.search(data));
   }
 
+  /**
+   * change number of pages to display per page and execute search method after.
+   */
+  async onPagingLimitChanged(limit) {
+    this.setState({ pagingLimit: limit }, () => this.search({ keyword: this.state.searchedKeyword }));
+  }
+
+  // todo: refactoring
+  // refs: https://redmine.weseek.co.jp/issues/82139
   async search(data) {
     const keyword = data.keyword;
     if (keyword === '') {
@@ -223,9 +228,11 @@ class SearchPage extends React.Component {
       <SearchControl
         searchingKeyword={this.state.searchingKeyword}
         appContainer={this.props.appContainer}
-        onSearchInvoked={this.searchHandler}
-        onExcludeUsersHome={this.onExcludeUsersHome}
-        onExcludeTrash={this.onExcludeTrash}
+        onSearchInvoked={this.onSearchInvoked}
+        onExcludeUserPagesSwitched={this.switchExcludeUserPagesHandler}
+        onExcludeTrashPagesSwitched={this.switchExcludeTrashPagesHandler}
+        excludeUserPages={this.state.excludeUserPages}
+        excludeTrashPages={this.state.excludeTrashPages}
       >
       </SearchControl>
     );
@@ -240,6 +247,9 @@ class SearchPage extends React.Component {
           SearchResultContent={this.renderSearchResultContent}
           searchResultMeta={this.state.searchResultMeta}
           searchingKeyword={this.state.searchedKeyword}
+          onPagingLimitChanged={this.onPagingLimitChanged}
+          pagingLimit={this.state.pagingLimit}
+          activePage={this.state.activePage}
         >
         </SearchPageLayout>
       </div>
@@ -256,7 +266,6 @@ const SearchPageWrapper = withUnstatedContainers(SearchPage, [AppContainer]);
 SearchPage.propTypes = {
   t: PropTypes.func.isRequired, // i18next
   appContainer: PropTypes.instanceOf(AppContainer).isRequired,
-
   query: PropTypes.object,
 };
 SearchPage.defaultProps = {
