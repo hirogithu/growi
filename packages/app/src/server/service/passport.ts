@@ -389,6 +389,7 @@ class PassportService implements S2sMessageHandlable {
     const groupSearchBase     = configManager.getConfig('crowi', 'security:passport-ldap:groupSearchBase');
     const groupSearchFilter   = configManager.getConfig('crowi', 'security:passport-ldap:groupSearchFilter');
     const groupDnProperty     = configManager.getConfig('crowi', 'security:passport-ldap:groupDnProperty') || 'uid';
+    const ldapsTlsCACertFile  = configManager.getConfig('crowi', 'security:passport-ldap:ldapsTlsCACertFile');
     /* eslint-enable no-multi-spaces */
 
     // parse serverUrl
@@ -425,6 +426,15 @@ class PassportService implements S2sMessageHandlable {
         ? bindDN.replace(/{{username}}/, loginForm.username)
         : bindDN;
       const fixedBindCredentials = (isUserBind) ? loginForm.password : bindCredentials;
+
+      let fs = require('fs');
+
+      let tlsOpt = (ldapsTlsCACertFile == "") ? {} : {
+          ca: [
+            fs.readFileSync(ldapsTlsCACertFile)
+          ]
+        } ;
+
       let serverOpt = {
         url,
         bindDN: fixedBindDN,
@@ -433,6 +443,7 @@ class PassportService implements S2sMessageHandlable {
         searchFilter,
         attrMapUsername: this.getLdapAttrNameMappedToUsername(),
         attrMapName: this.getLdapAttrNameMappedToName(),
+        tlsOptions: tlsOpt
       };
 
       if (groupSearchBase && groupSearchFilter) {
