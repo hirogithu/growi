@@ -74,6 +74,7 @@ export const defaultCrowiConfigs: { [key: string]: any } = {
   'security:passport-ldap:groupSearchBase' : undefined,
   'security:passport-ldap:groupSearchFilter' : undefined,
   'security:passport-ldap:groupDnProperty' : undefined,
+  'security:passport-ldap:ldapsTlsCACertFile' : '',
   'security:passport-ldap:isSameUsernameTreatedAsIdenticalUser': false,
   'security:passport-saml:isEnabled' : false,
   'security:passport-saml:isSameEmailTreatedAsIdenticalUser': false,
