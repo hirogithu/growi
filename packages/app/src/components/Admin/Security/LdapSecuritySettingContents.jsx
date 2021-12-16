@@ -408,7 +408,7 @@ class LdapSecuritySettingContents extends React.Component {
                 <input
                   className="form-control"
                   type="text"
-                  placeholder="Default: uid"
+                  placeholder="/some/where/server_name.crt"
                   name="TlsCACertFile"
                   defaultValue={adminLdapSecurityContainer.state.ldapTlsCACertFile || ''}
                   onChange={e => adminLdapSecurityContainer.changeTlsCACertFile(e.target.value)}
