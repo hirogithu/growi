@@ -33,6 +33,7 @@ export default class AdminLdapSecurityContainer extends Container {
       ldapGroupSearchBase: '',
       ldapGroupSearchFilter: '',
       ldapGroupDnProperty: '',
+      ldapsTlsCACertFile: '',
     };
 
   }
@@ -57,6 +58,7 @@ export default class AdminLdapSecurityContainer extends Container {
         ldapGroupSearchBase: ldapAuth.ldapGroupSearchBase,
         ldapGroupSearchFilter: ldapAuth.ldapGroupSearchFilter,
         ldapGroupDnProperty: ldapAuth.ldapGroupDnProperty,
+        ldapsTlsCACertFile: ldapAuth.ldapsTlsCACertFile
       });
     }
     catch (err) {
@@ -159,12 +161,19 @@ export default class AdminLdapSecurityContainer extends Container {
   }
 
   /**
+   * Change ldapsTlsCACertFile
+   */
+   changeTlsCACertFile(ldapsTlsCACertFile) {
+    this.setState({ ldapsTlsCACertFile });
+  }
+
+  /**
    * Update ldap option
    */
   async updateLdapSetting() {
     const {
       serverUrl, isUserBind, ldapBindDN, ldapBindDNPassword, ldapSearchFilter, ldapAttrMapUsername, isSameUsernameTreatedAsIdenticalUser,
-      ldapAttrMapMail, ldapAttrMapName, ldapGroupSearchBase, ldapGroupSearchFilter, ldapGroupDnProperty,
+      ldapAttrMapMail, ldapAttrMapName, ldapGroupSearchBase, ldapGroupSearchFilter, ldapGroupDnProperty, ldapsTlsCACertFile,
     } = this.state;
 
     let requestParams = {
@@ -180,6 +189,7 @@ export default class AdminLdapSecurityContainer extends Container {
       ldapGroupSearchBase,
       ldapGroupSearchFilter,
       ldapGroupDnProperty,
+      ldapsTlsCACertFile,
     };
 
     requestParams = await removeNullPropertyFromObject(requestParams);
@@ -199,6 +209,7 @@ export default class AdminLdapSecurityContainer extends Container {
       ldapGroupSearchBase: securitySettingParams.ldapGroupSearchBase,
       ldapGroupSearchFilter: securitySettingParams.ldapGroupSearchFilter,
       ldapGroupDnProperty: securitySettingParams.ldapGroupDnProperty,
+      ldapsTlsCACertFile: securitySettingParams.ldapsTlsCACertFile,
     });
     return response;
   }
