@@ -399,6 +399,27 @@ class LdapSecuritySettingContents extends React.Component {
                 </p>
               </div>
             </div>
+
+            <div className="form-group row">
+              <label className="text-left text-md-right col-md-3 col-form-label">
+                <strong htmlFor="TlsCACertFile">{t('TlsCACertFile')}</strong>
+              </label>
+              <div className="col-md-6">
+                <input
+                  className="form-control"
+                  type="text"
+                  placeholder="Default: uid"
+                  name="TlsCACertFile"
+                  defaultValue={adminLdapSecurityContainer.state.ldapTlsCACertFile || ''}
+                  onChange={e => adminLdapSecurityContainer.changeTlsCACertFile(e.target.value)}
+                />
+                <p className="form-text text-muted">
+                  {/* eslint-disable-next-line react/no-danger */}
+                  <small dangerouslySetInnerHTML={{ __html: t('security_setting.ldap. TlsCACertFile') }} />
+                </p>
+              </div>
+            </div>
+
             <div className="row my-3">
               <div className="offset-3 col-5">
                 <button
