@@ -52,6 +52,7 @@ const validator = {
     body('ldapGroupSearchBase').if(value => value != null).isString(),
     body('ldapGroupSearchFilter').if(value => value != null).isString(),
     body('ldapGroupDnProperty').if(value => value != null).isString(),
+    body('ldapTlsCACertFile').if(value => value != null).isString(),
   ],
   samlAuth: [
     body('entryPoint').if(value => value != null).isString(),
@@ -192,6 +193,9 @@ const validator = {
  *          ldapGroupDnProperty:
  *            type: string
  *            description: The property of user object to use in dn interpolation of Group Search Filter
+ *          ldapTlsCACertFile:
+ *            type: string
+ *            description: TLS CA Certificate File
  *      SamlAuthSetting:
  *        type: object
  *        properties:
@@ -405,6 +409,7 @@ module.exports = (crowi) => {
         ldapGroupSearchBase: await crowi.configManager.getConfig('crowi', 'security:passport-ldap:groupSearchBase'),
         ldapGroupSearchFilter: await crowi.configManager.getConfig('crowi', 'security:passport-ldap:groupSearchFilter'),
         ldapGroupDnProperty: await crowi.configManager.getConfig('crowi', 'security:passport-ldap:groupDnProperty'),
+        ldapTlsCACertFile: await crowi.configManager.getConfig('crowi', 'security:passport-ldap:TlsCACertFile'),
       },
       samlAuth: {
         missingMandatoryConfigKeys: await crowi.passportService.getSamlMissingMandatoryConfigKeys(),
@@ -802,6 +807,7 @@ module.exports = (crowi) => {
       'security:passport-ldap:groupSearchBase': req.body.ldapGroupSearchBase,
       'security:passport-ldap:groupSearchFilter': req.body.ldapGroupSearchFilter,
       'security:passport-ldap:groupDnProperty': req.body.ldapGroupDnProperty,
+      'security:passport-ldap:TlsCACertFile': req.body.ldapTlsCACertFile,
     };
 
     try {
@@ -820,6 +826,7 @@ module.exports = (crowi) => {
         ldapGroupSearchBase: await crowi.configManager.getConfig('crowi', 'security:passport-ldap:groupSearchBase'),
         ldapGroupSearchFilter: await crowi.configManager.getConfig('crowi', 'security:passport-ldap:groupSearchFilter'),
         ldapGroupDnProperty: await crowi.configManager.getConfig('crowi', 'security:passport-ldap:groupDnProperty'),
+        ldapTlsCACertFile: await crowi.configManager.getConfig('crowi', 'security:passport-ldap:TlsCACertFile'),
       };
       return res.apiv3({ securitySettingParams });
     }
